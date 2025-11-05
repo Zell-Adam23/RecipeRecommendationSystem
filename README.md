@@ -3,12 +3,12 @@
 Capstone 1 - Group 36 project  
 by: Adam Zell, Kyle Westwood, Emma Jepson  
 
-Link to Jira: (for whenever we make it)
+Link to Jira: [link](https://emma-jepson.atlassian.net/jira/software/projects/KAN/boards/1?atlOrigin=eyJpIjoiYjA3YjMxMTMxYWJkNGRkOGFmNDYwMTU1MjU1ZjVlNzciLCJwIjoiaiJ9)
 
 Team Roles:  
-Adam Zell -  
-Kyle Westwood -  
-Emma Jepson -  
+Adam Zell - Documentation Lead/ Developer  
+Kyle Westwood - Team Lead/ Developer  
+Emma Jepson - Lead Developer  
   
 Introduction:  
 Many people struggle to decide what to cook, especially when they have dietary restrictions, limited ingredients available, or want a specific type of meal. Traditional recipe websites often overwhelm users with choices that are not tailored to their specific needs. This project addresses that challenge by providing a recommendation system that helps users effectively find recipes that suit their requirements and needs.  
