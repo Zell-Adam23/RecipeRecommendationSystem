@@ -1,3 +1,22 @@
+# Running the Frontend  
+  
+in order to run the frontend make sure you have node.js installed (and added to PATH if needed)  
+  
+to install libraries and dependencies, in the Frontend-React/ folder in a terminal run:
+  
+npm install  
+  
+after doing that, to run the frontend in a terminal run:  
+  
+npm run dev  
+  
+and then you can access the frontend by opening your browser to localhost:5173 (or whatever it tells you)  
+  
+  
+  
+  
+Below is the default stuff that came with this setup so ill keep this here for a bit in case you want to read up on it:  
+  
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
