@@ -4,11 +4,11 @@ in order to run the frontend make sure you have node.js installed (and added to 
   
 to install libraries and dependencies, in the Frontend-React/ folder in a terminal run:
   
-npm install  
+$ npm install  
   
 after doing that, to run the frontend in a terminal run:  
   
-npm run dev  
+$ npm run dev  
   
 and then you can access the frontend by opening your browser to localhost:5173 (or whatever it tells you)  
   
