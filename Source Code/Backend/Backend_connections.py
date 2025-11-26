@@ -55,7 +55,7 @@ def get_user_by_id(id):
     return jsonify()
 
 @app.route("/api/users/authenticate", methods=["POST"])
-def get_user_by_id():
+def authenticate():
     """authenticate user"""
 
     data = request.get_json()
