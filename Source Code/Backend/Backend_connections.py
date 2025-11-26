@@ -1,6 +1,6 @@
 # Backend_connections.py
 
-# This is where the api will communicate with the backend
+# This is where the backend (python) will communicate with the frontend
 
 # flask is what i have used before but we can change it if need be
 from flask import Flask, jsonify, request
@@ -20,7 +20,7 @@ def get_all_recipes():
 
 
 @app.route("/api/recipes", methods=["POST"])
-def add_person():
+def insert_recipe():
     """insert_recipe"""
     data = request.get_json()
 
@@ -28,13 +28,41 @@ def add_person():
 
     return jsonify(), 201
 
+@app.route("/api/recipes/search", methods=["POST"])
+def search_recipe():
+    """search_recipe"""
+    data = request.get_json()
 
-@app.route("/api/check", methods=["GET"])
-def quick_check():
-    """check if working"""
-    return jsonify({"status":"ok"}), 200
+    #SQL request for searching for recipe in database
 
+    return jsonify(), 201
 
+@app.route("/api/recipes/edit", methods=["POST"])
+def add_person():
+    """edit_recipe"""
+    data = request.get_json()
+
+    #SQL request for adding recipe to the database
+
+    return jsonify(), 201
+
+@app.route("/api/users/<int:id>", methods=["GET"])
+def get_user_by_id(id):
+    """fetch_user_by_id"""
+
+    # SQL Request for user
+
+    return jsonify()
+
+@app.route("/api/users/authenticate", methods=["POST"])
+def get_user_by_id():
+    """authenticate user"""
+
+    data = request.get_json()
+
+    # SQL Request for authenticating user
+
+    return jsonify()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -17,6 +17,7 @@ def main():
     
     connection = create_client(supabase_url, supabase_service_key)
 
+    #SQL request - this is how the backend (python) will communicate to the database
     response = connection.table("recipes").select("*").execute()
     print (response.data)
 
