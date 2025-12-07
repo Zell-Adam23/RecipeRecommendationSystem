@@ -30,6 +30,17 @@ export async function addRecipe(recipe) {
   }
 }
 
+export async function fetch_recipe_by_id(id) {
+  try {
+    const content = await fetch(`http://localhost:5000/api/recipes/${id}`);
+    if (!content.ok) throw new Error("Failed to fetch recipe");
+    return await content.json();
+  } catch (error_info) {
+    console.error(error_info);
+    return [];
+  }
+}
+
 export async function SearchRecipe(search) {
   try {
     const content = await fetch(`http://localhost:5000/api/recipes/search`, {
