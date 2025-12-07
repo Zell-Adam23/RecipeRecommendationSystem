@@ -15,155 +15,84 @@ api/users/authenticate, POST:authenticates a users password
 # flask is what i have used before but we can change it if need be
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from Supabase_client import supabase_connection
-from datetime import datetime, timezone
+
+from Queries.get_all_recipes import get_all_recipes
+from Queries.get_full_recipe import get_recipe_by_id
+from Queries.search_recipes import search_recipe
+from Queries.get_user_by_id import get_user_by_id
+from Commands.create_recipe import insert_recipe
+from Commands.edit_recipe import edit_recipe
+from Commands.authentiate_user import authenticate
 
 app = Flask(__name__)
 
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+#---QUERIES---
 @app.route("/api/recipes", methods=["GET"])
-def get_all_recipes():
+def api_get_all_recipes():
     """fetch_all_recipes"""
-
-    response = supabase_connection.table("RECIPE").select("*").execute()
     
-    return jsonify(response.data), 200
-
-
-@app.route("/api/recipes", methods=["POST"])
-def insert_recipe():
-    """insert_recipe"""
-    data = request.get_json()
-
-    recipe = {
-        "title": data.get("title"),
-        "short_description": data.get("short_description"),
-        "is_public": data.get("is_public", True),
-        "created_at": datetime.now(timezone.utc)
-    }
-
-    response = supabase_connection.table("RECIPE").insert(recipe).execute()
-    return jsonify(response.data), 201
+    return jsonify(get_all_recipes()), 200
 
 @app.route("/api/recipes/<int:recipe_id>", methods=["GET"])
-def get_recipe(recipe_id):
-
-    #fetch recipe
-    recipe = (supabase_connection.table("RECIPE").select("*").eq("recipe_id", recipe_id).single().execute()).data
-    if not recipe:
-        return jsonify({"error": "Recipe not found"}), 404
-    
-    #fetch metadata
-    metadata = (supabase_connection.table("RECIPE_METADATA").select("*").eq("recipe_id", recipe_id).single().execute()).data
-    recipe["metadata"] = metadata
-
-    #fetch cuisine
-    cuisine_tags = (supabase_connection.table("RECIPE_CUISINE_TAG").select("cuisine_id").eq("recipe_id", recipe_id).execute())
-    cuisine_ids = [x["cuisine_id"] for x in cuisine_tags]
-
-    if cuisine_ids:
-        cuisines = (supabase_connection.table("CUISINE_TAG").select("*").in_("cuisine_id", cuisine_ids).execute()).data
-    else:
-        cuisines = []
-    
-    recipe["cuisine_tags"] = cuisines
-
-    #fetch diet
-    diet_tags = (supabase_connection.table("RECIPE_DIET_TAG").select("diet_id").eq("recipe_id", recipe_id).execute()).data
-    diet_ids = [x["diet_tag_id"] for x in diet_tags]
-
-    if diet_ids:
-        diets = (supabase_connection.table("DIET_TAG").select("*").in_("diet_tag_id", diet_ids).execute()).data
-    else:
-        diets = []
-
-    recipe["diet_tags"] = diets
-
-    #fetch equipment
-    equipment_tags = (supabase_connection.table("RECIPE_EQUIPMENT").select("equipment_id").eq("recipe_id", recipe_id).execute()).data
-    equipment_ids = [x["recipe_id"] for x in equipment_tags]
-
-    if equipment_ids:
-        equipment = (supabase_connection.table("EQUIPMENT").select("*").in_("equipment_id", equipment_ids).execute()).data
-    else:
-        equipment = []
-
-    recipe["equipment"] = equipment
-
-    #fetch ingredients
-    ingredient_tags = (supabase_connection.table("RECIPE_INGREDIENTS").select("*").eq("recipe_id", recipe_id).execute()).data
-    ingredient_ids = [x["ingredient_id"] for x in ingredient_tags]
-
-    if ingredient_ids:
-        ingredients = (supabase_connection.table("INGREDIENT").select("*").in_("ingredient_id", ingredient_ids).execute()).data
-    else:
-        ingredients = []
-
-    ingredients_with_quantities = []
-    for current in ingredient_tags:
-        x = next((y for y in ingredients if y["ingredient_id"] == current["ingredient_id"]), None)
-        ingredients_with_quantities.append({
-            "ingredient_id": current["ingredient_id"],
-            "name": x["name"],
-            "quantity": current["quantity"],
-            "unit": current["unit"],
-            "optional": current["optional"]
-        })
-
-    recipe["ingredients"] = ingredients_with_quantities
-
-    #fetch ratings
-    ratings = (supabase_connection.table("RECIPE_RATING").select("*").eq("recipe_id").execute()).data
-
-    recipe["ratings"] = ratings
-
+def api_get_recipe(recipe_id):
+    recipe = get_recipe_by_id(recipe_id)
+    if recipe is None:
+        return jsonify({"error": "Recipe Not Found"}), 404
     return jsonify(recipe), 200
 
 @app.route("/api/recipes/search", methods=["POST"])
-def search_recipe():
+def api_search_recipe():
     """search_recipe"""
     data = request.get_json()
     query = data.get("query", "")
 
-    response = supabase_connection.table("RECIPE").select("*").ilike("title", f"%{query}").execute()
-    return jsonify(response.data), 200
+    return jsonify(search_recipe(query)), 200
+
+@app.route("/api/users/<int:id>", methods=["GET"])
+def api_get_user_by_id(id):
+    """fetch_user_by_id"""
+
+    return jsonify(get_user_by_id(id)), 200
+
+
+#---COMMANDS---
+@app.route("/api/recipes", methods=["POST"])
+def api_insert_recipe():
+    """insert_recipe"""
+
+    data = request.get_json()
+
+    return jsonify(insert_recipe(data)), 201
+
 
 @app.route("/api/recipes/edit", methods=["POST"])
-def edit_recipe():
+def api_edit_recipe():
     """edit_recipe"""
     data = request.get_json()
     recipe_id = data.get("recipe_id")
 
     update_fields = {x: y for x, y in data.items() if x != "recipe_id"}
     
-    response=supabase_connection.table("RECIPE").update(update_fields).eq("recipe_id", recipe_id).execute()
+    return jsonify(edit_recipe(recipe_id, update_fields)), 200
 
-    return jsonify(response.data), 200
 
-@app.route("/api/users/<int:id>", methods=["GET"])
-def get_user_by_id(id):
-    """fetch_user_by_id"""
-
-    response = supabase_connection.table("USER_ACCOUNT").select("*").eq("user_id", id).single().execute()
-
-    return jsonify(response.data), 200
 
 @app.route("/api/users/authenticate", methods=["POST"])
-def authenticate():
+def api_authenticate():
     """authenticate user"""
 
     data = request.get_json()
     email = data.get("email")
     password = data.get("password_hash")
+    user_id = authenticate(email, password)
 
-    user = supabase_connection.table("USER_AUTH").select("user_id, email, password_hash").eq("email", email).single().execute()
 
-    if not user.data:
-        return jsonify({"error": "Invalid email"}), 404
-    if user.data["password_hash"] != password:
-        return jsonify({"error": "invalid password"}), 401
-    return jsonify({"user_id": user.data["user_id"], "email": email}), 200
+    if user_id is None:
+        return jsonify({"error": "invalid credentials"}), 401
+    return jsonify({"user_id": user_id}), 200
+
 
 
 if __name__ == "__main__":
