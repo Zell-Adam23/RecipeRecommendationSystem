@@ -8,21 +8,26 @@ api/recipes, POST: adds a recipe to the database
 api/recipes/<int:recipe_id>, GET: returns a specifc recipe with all included metadata, cuisine tags, diet_tags, equipment, ingredients, and ratings
 api/recipes/search, POST: searches for a recipe (at the moment, just in the recipe table)
 api/recipes/edit, POST: edits an existing recipe
+api/users, POST: registers a new user with hashed password
 api/users/<int:id>, GET: fetches inofrmation of a particular user
-api/users/authenticate, POST:authenticates a users password
+api/users/authenticate, POST: authenticates a users password (verifies hashed password)
 """
 
 # flask is what i have used before but we can change it if need be
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+from Supabase_client import supabase_connection
 from Queries.get_all_recipes import get_all_recipes
 from Queries.get_full_recipe import get_recipe_by_id
 from Queries.search_recipes import search_recipe
 from Queries.get_user_by_id import get_user_by_id
+from Queries.get_saved_recipes import get_saved_recipes
 from Commands.create_recipe import insert_recipe
 from Commands.edit_recipe import edit_recipe
 from Commands.authentiate_user import authenticate
+from Commands.register_user import register_user
+from Commands.save_recipe import save_recipe
 
 app = Flask(__name__)
 
@@ -79,6 +84,20 @@ def api_edit_recipe():
 
 
 
+@app.route("/api/users", methods=["POST"])
+def api_register_user():
+    """register new user"""
+
+    data = request.get_json()
+    result = register_user(data)
+
+    # Check if result is a tuple (error case)
+    if isinstance(result, tuple):
+        return jsonify(result[0]), result[1]
+
+    return jsonify(result), 201
+
+
 @app.route("/api/users/authenticate", methods=["POST"])
 def api_authenticate():
     """authenticate user"""
@@ -88,11 +107,42 @@ def api_authenticate():
     password = data.get("password_hash")
     user_id = authenticate(email, password)
 
-
     if user_id is None:
         return jsonify({"error": "invalid credentials"}), 401
-    return jsonify({"user_id": user_id}), 200
 
+    # Get user details to return (like registration does)
+    user_data = supabase_connection.table("USER_ACCOUNT").select("user_id, display_name").eq("user_id", user_id).single().execute()
+    user_auth = supabase_connection.table("USER_AUTH").select("email").eq("user_id", user_id).single().execute()
+
+    return jsonify({
+        "user_id": user_id,
+        "display_name": user_data.data.get("display_name"),
+        "email": user_auth.data.get("email")
+    }), 200
+
+
+@app.route("/api/saved-recipes", methods=["POST"])
+def api_save_recipe():
+    """save a recipe to user's saved list"""
+
+    data = request.get_json()
+    user_id = data.get("user_id")
+    recipe_id = data.get("recipe_id")
+
+    result = save_recipe(user_id, recipe_id)
+
+    # Check if result is a tuple (error case)
+    if isinstance(result, tuple):
+        return jsonify(result[0]), result[1]
+
+    return jsonify(result), 201
+
+
+@app.route("/api/saved-recipes/<int:user_id>", methods=["GET"])
+def api_get_saved_recipes(user_id):
+    """get all saved recipes for a user"""
+
+    return jsonify(get_saved_recipes(user_id)), 200
 
 
 if __name__ == "__main__":
