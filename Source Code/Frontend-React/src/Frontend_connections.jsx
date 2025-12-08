@@ -2,14 +2,19 @@
 
 //this is where the api will communicate with the frontend
 
-//these were mostly copied from another project of mine so they should work but ill debug them more when everything is all set up
+
+//TODO: Sort into Command vs Query later
+
+
+const API_URL = 'http://127.0.0.1:5000';
+
 export async function fetchRecipes() {
   try {
-    const content = await fetch(`http://localhost:5000/api/recipes`);
-    if (!content.ok) throw new Error("Failed to fetch recipes");
-    return await content.json();
-  } catch (error_info) {
-    console.error(error_info);
+    const response = await fetch(`${API_URL}/api/recipes`);
+    if (!response.ok) throw new Error("Failed to fetch recipes");
+    return await response.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
     return [];
   }
 }
@@ -17,27 +22,27 @@ export async function fetchRecipes() {
 
 export async function addRecipe(recipe) {
   try {
-    const content = await fetch(`http://localhost:5000/api/recipes`, {
+    const response = await fetch(`${API_URL}/api/recipes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(recipe),
     });
-    if (!content.ok) throw new Error("Failed to add recipe");
-    return await content.json();
-  } catch (error_info) {
-    console.error(error_info);
+    if (!response.ok) throw new Error("Failed to add recipe");
+    return await response.json();
+  } catch (error) {
+    console.error(error);
     return null;
   }
 }
 
-export async function fetch_recipe_by_id(id) {
+export async function fetchRecipeById(id) {
   try {
-    const content = await fetch(`http://localhost:5000/api/recipes/${id}`);
-    if (!content.ok) throw new Error("Failed to fetch recipe");
-    return await content.json();
-  } catch (error_info) {
-    console.error(error_info);
-    return [];
+    const response = await fetch(`${API_URL}/api/recipes/${id}`);
+    if (!response.ok) throw new Error("Failed to fetch recipe");
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
   }
 }
 
@@ -71,6 +76,32 @@ export async function editRecipe(id, edit) {
   }
 }
 
+export async function saveRecipe(userId, recipeId) {
+  try {
+    const response = await fetch(`${API_URL}/api/saved-recipes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, recipe_id: recipeId }),
+    });
+    if (!response.ok) throw new Error("Failed to save recipe");
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export async function getSavedRecipes(userId) {
+  try {
+    const response = await fetch(`${API_URL}/api/saved-recipes/${userId}`);
+    if (!response.ok) throw new Error("Failed to fetch saved recipes");
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
 
 export async function fetch_user_by_id(id) {
   try {
@@ -83,17 +114,35 @@ export async function fetch_user_by_id(id) {
   }
 }
 
-export async function authenticate(userid, password) {
+
+
+export async function loginUser(email, password) {
   try {
-    const content = await fetch(`http://localhost:5000/api/users/authenticate`, {
+    const response = await fetch(`${API_URL}/api/users/authenticate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userid, password),
+      body: JSON.stringify({ email, password_hash: password }),
     });
-    if (!content.ok) throw new Error("Failed to add recipe");
-    return await content.json();
-  } catch (error_info) {
-    console.error(error_info);
+    if (!response.ok) throw new Error("Invalid credentials");
+    return await response.json();
+  } catch (error) {
+    console.error('Login error:', error);
+    return null;
+  }
+}
+
+
+export async function registerUser(userData) {
+  try {
+    const response = await fetch(`${API_URL}/api/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData),
+    });
+    if (!response.ok) throw new Error("Registration failed");
+    return await response.json();
+  } catch (error) {
+    console.error('Registration error:', error);
     return null;
   }
 }

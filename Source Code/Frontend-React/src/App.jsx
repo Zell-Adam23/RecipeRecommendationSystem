@@ -1,105 +1,8 @@
 //App.jsx - the main frontend file
 
 import { useState, useEffect } from 'react';
+import { fetchRecipes, addRecipe, loginUser, registerUser, fetchRecipeById, saveRecipe, getSavedRecipes } from './Frontend_connections';
 
-const API_URL = 'http://127.0.0.1:5000';
-
-// ============================================
-// API FUNCTIONS
-// ============================================
-
-async function loginUser(email, password) {
-  try {
-    const response = await fetch(`${API_URL}/api/users/authenticate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password_hash: password }),
-    });
-    if (!response.ok) throw new Error("Invalid credentials");
-    return await response.json();
-  } catch (error) {
-    console.error('Login error:', error);
-    return null;
-  }
-}
-
-async function registerUser(userData) {
-  try {
-    const response = await fetch(`${API_URL}/api/users`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
-    });
-    if (!response.ok) throw new Error("Registration failed");
-    return await response.json();
-  } catch (error) {
-    console.error('Registration error:', error);
-    return null;
-  }
-}
-
-async function fetchRecipes() {
-  try {
-    const response = await fetch(`${API_URL}/api/recipes`);
-    if (!response.ok) throw new Error("Failed to fetch recipes");
-    return await response.json();
-  } catch (error) {
-    console.error('Fetch error:', error);
-    return [];
-  }
-}
-
-async function fetchRecipeById(id) {
-  try {
-    const response = await fetch(`${API_URL}/api/recipes/${id}`);
-    if (!response.ok) throw new Error("Failed to fetch recipe");
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
-async function addRecipe(recipe) {
-  try {
-    const response = await fetch(`${API_URL}/api/recipes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(recipe),
-    });
-    if (!response.ok) throw new Error("Failed to add recipe");
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
-async function saveRecipe(userId, recipeId) {
-  try {
-    const response = await fetch(`${API_URL}/api/saved-recipes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: userId, recipe_id: recipeId }),
-    });
-    if (!response.ok) throw new Error("Failed to save recipe");
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
-async function getSavedRecipes(userId) {
-  try {
-    const response = await fetch(`${API_URL}/api/saved-recipes/${userId}`);
-    if (!response.ok) throw new Error("Failed to fetch saved recipes");
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-}
 
 // ============================================
 // LOGIN/SIGNUP COMPONENT
@@ -368,6 +271,7 @@ function App() {
   useEffect(() => {
     if (user) {
       loadRecipes();
+      //loadCreatedRecipes() - could be future implementation
       loadSavedRecipes();
     }
   }, [user]);

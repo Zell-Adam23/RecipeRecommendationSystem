@@ -62,6 +62,14 @@ def api_get_user_by_id(id):
     return jsonify(get_user_by_id(id)), 200
 
 
+@app.route("/api/saved-recipes/<int:user_id>", methods=["GET"])
+def api_get_saved_recipes(user_id):
+    """get all saved recipes for a user"""
+
+    return jsonify(get_saved_recipes(user_id)), 200
+
+
+
 #---COMMANDS---
 @app.route("/api/recipes", methods=["POST"])
 def api_insert_recipe():
@@ -81,7 +89,6 @@ def api_edit_recipe():
     update_fields = {x: y for x, y in data.items() if x != "recipe_id"}
     
     return jsonify(edit_recipe(recipe_id, update_fields)), 200
-
 
 
 @app.route("/api/users", methods=["POST"])
@@ -137,12 +144,6 @@ def api_save_recipe():
 
     return jsonify(result), 201
 
-
-@app.route("/api/saved-recipes/<int:user_id>", methods=["GET"])
-def api_get_saved_recipes(user_id):
-    """get all saved recipes for a user"""
-
-    return jsonify(get_saved_recipes(user_id)), 200
 
 
 if __name__ == "__main__":
