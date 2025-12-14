@@ -44,6 +44,9 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: Source-Code/Frontend-React
+      - name: debug
+        run: ls -la
+        working-directory: Source-Code/Frontend-React
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
