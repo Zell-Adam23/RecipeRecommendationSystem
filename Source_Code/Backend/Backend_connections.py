@@ -23,12 +23,16 @@ from .Queries.get_full_recipe import get_recipe_by_id
 from .Queries.search_recipes import search_recipe
 from .Queries.get_user_by_id import get_user_by_id
 from .Queries.get_saved_recipes import get_saved_recipes
+from .Queries.get_user_pantry import get_user_pantry
+from .Queries.search_recipes_by_pantry import search_recipes_by_pantry
 from .Commands.create_recipe import insert_recipe
 from .Commands.edit_recipe import edit_recipe
 from .Commands.authentiate_user import authenticate
 from .Commands.register_user import register_user
 from .Commands.save_recipe import save_recipe
 from .Commands.unsave_recipe import unsave_recipe
+from .Commands.add_pantry_item import add_pantry_item
+from .Commands.remove_pantry_item import remove_pantry_item
 
 app = Flask(__name__)
 
@@ -55,6 +59,12 @@ def api_search_recipe():
     query = data.get("query", "")
 
     return jsonify(search_recipe(query)), 200
+
+@app.route("/api/recipes/search-by-pantry/<int:user_id>", methods=["GET"])
+def api_search_recipes_by_pantry(user_id):
+    """search recipes by user's pantry ingredients"""
+
+    return jsonify(search_recipes_by_pantry(user_id)), 200
 
 @app.route("/api/users/<int:id>", methods=["GET"])
 def api_get_user_by_id(id):
@@ -155,6 +165,49 @@ def api_unsave_recipe():
     recipe_id = data.get("recipe_id")
 
     result = unsave_recipe(user_id, recipe_id)
+
+    # Check if result is a tuple (error case)
+    if isinstance(result, tuple):
+        return jsonify(result[0]), result[1]
+
+    return jsonify(result), 200
+
+
+@app.route("/api/pantry/<int:user_id>", methods=["GET"])
+def api_get_user_pantry(user_id):
+    """get all pantry items for a user"""
+
+    return jsonify(get_user_pantry(user_id)), 200
+
+
+@app.route("/api/pantry", methods=["POST"])
+def api_add_pantry_item():
+    """add an item to user's pantry"""
+
+    data = request.get_json()
+    user_id = data.get("user_id")
+    ingredient_name = data.get("ingredient_name")
+    quantity = data.get("quantity")
+    unit = data.get("unit")
+
+    result = add_pantry_item(user_id, ingredient_name, quantity, unit)
+
+    # Check if result is a tuple (error case)
+    if isinstance(result, tuple):
+        return jsonify(result[0]), result[1]
+
+    return jsonify(result), 201
+
+
+@app.route("/api/pantry", methods=["DELETE"])
+def api_remove_pantry_item():
+    """remove an item from user's pantry"""
+
+    data = request.get_json()
+    user_id = data.get("user_id")
+    ingredient_id = data.get("ingredient_id")
+
+    result = remove_pantry_item(user_id, ingredient_id)
 
     # Check if result is a tuple (error case)
     if isinstance(result, tuple):
