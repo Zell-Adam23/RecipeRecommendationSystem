@@ -1,6 +1,6 @@
 import pytest
 from Source_Code.Backend.Backend_connections import app
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 
 @pytest.fixture
@@ -8,6 +8,15 @@ def client():
     app.config['TESTING'] = True
     with app.test_client() as client:
         yield client
+
+
+@pytest.fixture
+def mock_supabase():
+    with patch("Source_Code.Backend.Backend_connections.get_supabase_client") as mock:
+        fake_client = MagicMock()
+        mock.return_value = fake_client
+        yield fake_client
+
 
 def test_get_all_recipes(client):
     mock_data = [
