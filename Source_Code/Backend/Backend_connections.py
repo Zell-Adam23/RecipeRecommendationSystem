@@ -17,17 +17,17 @@ api/users/authenticate, POST: authenticates a users password (verifies hashed pa
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from Supabase_client import supabase_connection
-from Queries.get_all_recipes import get_all_recipes
-from Queries.get_full_recipe import get_recipe_by_id
-from Queries.search_recipes import search_recipe
-from Queries.get_user_by_id import get_user_by_id
-from Queries.get_saved_recipes import get_saved_recipes
-from Commands.create_recipe import insert_recipe
-from Commands.edit_recipe import edit_recipe
-from Commands.authentiate_user import authenticate
-from Commands.register_user import register_user
-from Commands.save_recipe import save_recipe
+from .Supabase_client import supabase_connection
+from .Queries.get_all_recipes import get_all_recipes
+from .Queries.get_full_recipe import get_recipe_by_id
+from .Queries.search_recipes import search_recipe
+from .Queries.get_user_by_id import get_user_by_id
+from .Queries.get_saved_recipes import get_saved_recipes
+from .Commands.create_recipe import insert_recipe
+from .Commands.edit_recipe import edit_recipe
+from .Commands.authentiate_user import authenticate
+from .Commands.register_user import register_user
+from .Commands.save_recipe import save_recipe
 
 app = Flask(__name__)
 
