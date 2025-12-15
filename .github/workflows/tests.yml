@@ -20,6 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r Source_Code/Backend/requirements.txt
+          pip install pytest pytest-html pytest-cov coverage
   
       - name: Run tests
         run: pytest Testing/ --disable-warnings -v
