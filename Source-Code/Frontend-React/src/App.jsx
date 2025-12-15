@@ -777,40 +777,38 @@ function App() {
                   </div>
                 )}
 
-                {selectedRecipe.metadata && (
-                  <div style={{ 
-                    background: '#f1f8f4', 
-                    padding: '18px', 
-                    borderRadius: '8px',
-                    marginBottom: '20px',
-                    border: '1px solid #c8e6c9'
+                <div style={{
+                  background: '#f1f8f4',
+                  padding: '18px',
+                  borderRadius: '8px',
+                  marginBottom: '20px',
+                  border: '1px solid #c8e6c9'
+                }}>
+                  <h4 style={{
+                    marginTop: 0,
+                    marginBottom: '12px',
+                    color: '#2d5016',
+                    fontSize: '18px',
+                    fontWeight: '600'
                   }}>
-                    <h4 style={{ 
-                      marginTop: 0,
-                      marginBottom: '12px',
-                      color: '#2d5016',
-                      fontSize: '18px',
-                      fontWeight: '600'
-                    }}>
-                      Recipe Info
-                    </h4>
-                    <p style={{ color: '#555', margin: '6px 0', fontSize: '15px' }}>
-                      <strong>Prep Time:</strong> {selectedRecipe.metadata.prep_time_min || 'N/A'} min
-                    </p>
-                    <p style={{ color: '#555', margin: '6px 0', fontSize: '15px' }}>
-                      <strong>Cook Time:</strong> {selectedRecipe.metadata.cook_time_min || 'N/A'} min
-                    </p>
-                    <p style={{ color: '#555', margin: '6px 0', fontSize: '15px' }}>
-                      <strong>Total Time:</strong> {selectedRecipe.metadata.total_time_min || 'N/A'} min
-                    </p>
-                    <p style={{ color: '#555', margin: '6px 0', fontSize: '15px' }}>
-                      <strong>Servings:</strong> {selectedRecipe.metadata.servings || 'N/A'}
-                    </p>
-                    <p style={{ color: '#555', margin: '6px 0', fontSize: '15px' }}>
-                      <strong>Difficulty:</strong> {selectedRecipe.metadata.difficulty || 'N/A'}
-                    </p>
-                  </div>
-                )}
+                    Recipe Info
+                  </h4>
+                  <p style={{ color: '#555', margin: '6px 0', fontSize: '15px' }}>
+                    <strong>Prep Time:</strong> {selectedRecipe.metadata?.prep_time_min || 'N/A'} min
+                  </p>
+                  <p style={{ color: '#555', margin: '6px 0', fontSize: '15px' }}>
+                    <strong>Cook Time:</strong> {selectedRecipe.metadata?.cook_time_min || 'N/A'} min
+                  </p>
+                  <p style={{ color: '#555', margin: '6px 0', fontSize: '15px' }}>
+                    <strong>Total Time:</strong> {selectedRecipe.metadata?.total_time_min || 'N/A'} min
+                  </p>
+                  <p style={{ color: '#555', margin: '6px 0', fontSize: '15px' }}>
+                    <strong>Servings:</strong> {selectedRecipe.metadata?.servings || 'N/A'}
+                  </p>
+                  <p style={{ color: '#555', margin: '6px 0', fontSize: '15px' }}>
+                    <strong>Difficulty:</strong> {selectedRecipe.metadata?.difficulty || 'N/A'}
+                  </p>
+                </div>
               </div>
             )}
           </div>
