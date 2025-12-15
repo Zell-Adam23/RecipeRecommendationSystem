@@ -1,4 +1,4 @@
-from Supabase_client import supabase_connection
+from Supabase_client import get_supabase_client
 from datetime import datetime, timezone
 
 def insert_recipe(data):
@@ -11,7 +11,7 @@ def insert_recipe(data):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
-    response = supabase_connection.table("RECIPE").insert(recipe).execute()
+    response = get_supabase_client().table("RECIPE").insert(recipe).execute()
 
     if response.data:
         return response.data[0]

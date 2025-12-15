@@ -1,11 +1,11 @@
-from Supabase_client import supabase_connection
+from Supabase_client import get_supabase_client
 import bcrypt
 
 def authenticate(email, password):
     """authenticate user"""
 
     try:
-        user = supabase_connection.table("USER_AUTH").select("user_id, email, password_hash").eq("email", email).single().execute()
+        user = get_supabase_client().table("USER_AUTH").select("user_id, email, password_hash").eq("email", email).single().execute()
 
         if not user.data:
             return None

@@ -1,4 +1,4 @@
-from Supabase_client import supabase_connection
+from Supabase_client import get_supabase_client
 from datetime import datetime, timezone
 import bcrypt
 
@@ -14,7 +14,7 @@ def register_user(data):
         return {"error": "Missing required fields"}, 400
 
     # Check if user already exists
-    existing_user = supabase_connection.table("USER_AUTH").select("email").eq("email", email).execute()
+    existing_user = get_supabase_client().table("USER_AUTH").select("email").eq("email", email).execute()
     if existing_user.data:
         return {"error": "Email already exists"}, 409
 
@@ -29,7 +29,7 @@ def register_user(data):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
-    user_response = supabase_connection.table("USER_ACCOUNT").insert(user_account).execute()
+    user_response = get_supabase_client().table("USER_ACCOUNT").insert(user_account).execute()
 
     if not user_response.data:
         return {"error": "Failed to create user account"}, 500
@@ -43,11 +43,11 @@ def register_user(data):
         "password_hash": hashed_password.decode('utf-8')  # Store as string in database
     }
 
-    auth_response = supabase_connection.table("USER_AUTH").insert(user_auth).execute()
+    auth_response = get_supabase_client().table("USER_AUTH").insert(user_auth).execute()
 
     if not auth_response.data:
         # Rollback: delete the user account if auth creation fails
-        supabase_connection.table("USER_ACCOUNT").delete().eq("user_id", user_id).execute()
+        get_supabase_client().table("USER_ACCOUNT").delete().eq("user_id", user_id).execute()
         return {"error": "Failed to create authentication record"}, 500
 
     # Return user info (same format as login)
