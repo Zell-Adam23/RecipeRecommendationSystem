@@ -6,7 +6,7 @@
 //TODO: Sort into Command vs Query later
 
 
-const API_URL = 'http://127.0.0.1:5000';
+const API_URL = import.meta.env.RENDER_API_URL;
 
 export async function fetchRecipes() {
   try {
@@ -48,7 +48,7 @@ export async function fetchRecipeById(id) {
 
 export async function SearchRecipe(search) {
   try {
-    const content = await fetch(`http://localhost:5000/api/recipes/search`, {
+    const content = await fetch(`${API_URL}/api/recipes/search`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(search),
@@ -63,10 +63,10 @@ export async function SearchRecipe(search) {
 
 export async function editRecipe(id, edit) {
   try {
-    const content = await fetch(`http://localhost:5000/api/recipes/edit`, {
+    const content = await fetch(`${API_URL}/api/recipes/edit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(id, edit),
+      body: JSON.stringify({recipe_id: id, ...edit}),
     });
     if (!content.ok) throw new Error("Failed to add recipe");
     return await content.json();
@@ -105,7 +105,7 @@ export async function getSavedRecipes(userId) {
 
 export async function fetch_user_by_id(id) {
   try {
-    const content = await fetch(`http://localhost:5000/api/users/${id}`);
+    const content = await fetch(`${API_URL}/api/users/${id}`);
     if (!content.ok) throw new Error("Failed to fetch user");
     return await content.json();
   } catch (error_info) {
