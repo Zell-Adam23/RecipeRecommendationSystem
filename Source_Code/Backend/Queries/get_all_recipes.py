@@ -1,8 +1,8 @@
-from Supabase_client import supabase_connection
+from ..Supabase_client import get_supabase_client
 
 def get_all_recipes():
     """fetch_all_recipes"""
 
-    response = supabase_connection.table("RECIPE").select("*").execute()
+    response = get_supabase_client().table("RECIPE").select("*").execute()
 
     return(response.data)

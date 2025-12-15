@@ -1,8 +1,8 @@
-from Supabase_client import supabase_connection
+from ..Supabase_client import get_supabase_client
 
 def search_recipe(query):
     """search_recipe"""
 
-    response = supabase_connection.table("RECIPE").select("*").ilike("title", f"%{query}").execute()
+    response = get_supabase_client().table("RECIPE").select("*").ilike("title", f"%{query}").execute()
     
     return (response.data)
