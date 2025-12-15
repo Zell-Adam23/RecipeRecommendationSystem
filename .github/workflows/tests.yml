@@ -23,13 +23,12 @@ jobs:
           pip install pytest pytest-flask
   
       - name: Run tests
-        working-directory: Testing
-        run: pytest
+        run: pytest Testing/ --disable-warnings -v
 
       - name: Run tests with coverage
         run: |
-          pytest \
-            --cov=. \
+          pytest Testing/ \
+            --cov=Source-Code/Backend \
             --cov-report=term \
             --cov-report=xml \
             --cov-report=html \
