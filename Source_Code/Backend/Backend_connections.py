@@ -17,7 +17,7 @@ api/users/authenticate, POST: authenticates a users password (verifies hashed pa
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from .Supabase_client import supabase_connection
+from .Supabase_client import get_supabase_client
 from .Queries.get_all_recipes import get_all_recipes
 from .Queries.get_full_recipe import get_recipe_by_id
 from .Queries.search_recipes import search_recipe
@@ -118,8 +118,8 @@ def api_authenticate():
         return jsonify({"error": "invalid credentials"}), 401
 
     # Get user details to return (like registration does)
-    user_data = supabase_connection.table("USER_ACCOUNT").select("user_id, display_name").eq("user_id", user_id).single().execute()
-    user_auth = supabase_connection.table("USER_AUTH").select("email").eq("user_id", user_id).single().execute()
+    user_data = get_supabase_client().table("USER_ACCOUNT").select("user_id, display_name").eq("user_id", user_id).single().execute()
+    user_auth = get_supabase_client().table("USER_AUTH").select("email").eq("user_id", user_id).single().execute()
 
     return jsonify({
         "user_id": user_id,
