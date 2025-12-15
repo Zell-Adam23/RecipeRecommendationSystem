@@ -1,7 +1,7 @@
 //App.jsx - the main frontend file
 
 import { useState, useEffect } from 'react';
-import { fetchRecipes, addRecipe, loginUser, registerUser, fetchRecipeById, saveRecipe, unsaveRecipe, getSavedRecipes } from './Frontend_connections';
+import { fetchRecipes, addRecipe, loginUser, registerUser, fetchRecipeById, saveRecipe, unsaveRecipe, getSavedRecipes, getUserPantry, addPantryItem, removePantryItem, searchRecipesByPantry } from './Frontend_connections';
 
 
 // ============================================
@@ -257,22 +257,30 @@ function App() {
   const [user, setUser] = useState(null);
   const [recipes, setRecipes] = useState([]);
   const [savedRecipes, setSavedRecipes] = useState([]);
+  const [pantryItems, setPantryItems] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [viewMode, setViewMode] = useState('all'); // 'all', 'my', 'saved'
-  
+  const [viewMode, setViewMode] = useState('all'); // 'all', 'my', 'saved', 'pantry'
+  const [filterByPantry, setFilterByPantry] = useState(false);
+
   const [newRecipe, setNewRecipe] = useState({
     title: '',
     short_description: '',
     is_public: true
   });
 
+  const [newPantryItem, setNewPantryItem] = useState({
+    ingredient_name: '',
+    quantity: '',
+    unit: ''
+  });
+
   useEffect(() => {
     if (user) {
       loadRecipes();
-      //loadCreatedRecipes() - could be future implementation
       loadSavedRecipes();
+      loadPantryItems();
     }
   }, [user]);
 
@@ -288,9 +296,62 @@ function App() {
     setSavedRecipes(saved.map(s => s.recipe_id));
   }
 
+  async function loadPantryItems() {
+    const pantry = await getUserPantry(user.user_id);
+    setPantryItems(pantry);
+  }
+
+  async function handleAddPantryItem() {
+    if (!newPantryItem.ingredient_name.trim()) return;
+
+    setLoading(true);
+    const result = await addPantryItem(
+      user.user_id,
+      newPantryItem.ingredient_name,
+      newPantryItem.quantity || null,
+      newPantryItem.unit || null
+    );
+
+    if (result) {
+      await loadPantryItems();
+      setNewPantryItem({ ingredient_name: '', quantity: '', unit: '' });
+    }
+    setLoading(false);
+  }
+
+  async function handleRemovePantryItem(ingredientId) {
+    const result = await removePantryItem(user.user_id, ingredientId);
+    if (result) {
+      await loadPantryItems();
+    }
+  }
+
   async function handleRecipeClick(recipeId) {
     setLoading(true);
     const fullRecipe = await fetchRecipeById(recipeId);
+
+    // If filtering by pantry, merge pantry info into the selected recipe
+    if (filterByPantry) {
+      const recipeWithPantryInfo = recipes.find(r => r.recipe_id === recipeId);
+      if (recipeWithPantryInfo && recipeWithPantryInfo.ingredients) {
+        // Merge pantry info from the filtered list into the full recipe
+        fullRecipe.ingredients = fullRecipe.ingredients?.map(ing => {
+          const pantryInfo = recipeWithPantryInfo.ingredients.find(
+            pi => pi.name.toLowerCase() === ing.name.toLowerCase()
+          );
+          return {
+            ...ing,
+            in_pantry: pantryInfo?.in_pantry || false,
+            pantry_name: pantryInfo?.pantry_name || null,
+            match_type: pantryInfo?.match_type || 'none'
+          };
+        });
+        fullRecipe.match_percentage = recipeWithPantryInfo.match_percentage;
+        fullRecipe.matched_ingredients_count = recipeWithPantryInfo.matched_ingredients_count;
+        fullRecipe.required_ingredients_count = recipeWithPantryInfo.required_ingredients_count;
+      }
+    }
+
     setSelectedRecipe(fullRecipe);
     setLoading(false);
   }
@@ -343,9 +404,8 @@ function App() {
   });
 
   return (
-    <div style={{ 
+    <div style={{
       minHeight: '100vh',
-      height: '100%',
       background: 'linear-gradient(135deg, #f0f9e8 0%, #fffbea 100%)',
       padding: '0',
       margin: '0'
@@ -463,7 +523,7 @@ function App() {
             My Recipes
           </button>
 
-          <button 
+          <button
             onClick={() => setViewMode('saved')}
             style={{
               padding: '14px 28px',
@@ -480,6 +540,54 @@ function App() {
           >
             Saved ({savedRecipes.length})
           </button>
+
+          <button
+            onClick={() => setViewMode('pantry')}
+            style={{
+              padding: '14px 28px',
+              background: viewMode === 'pantry' ? 'linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)' : '#fff',
+              color: viewMode === 'pantry' ? '#fff' : '#4caf50',
+              border: viewMode === 'pantry' ? 'none' : '2px solid #4caf50',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: '600',
+              boxShadow: viewMode === 'pantry' ? '0 4px 12px rgba(76, 175, 80, 0.3)' : 'none',
+              transition: 'all 0.3s'
+            }}
+          >
+            My Pantry ({pantryItems.length})
+          </button>
+
+          {viewMode !== 'pantry' && (
+            <button
+              onClick={async () => {
+                setFilterByPantry(!filterByPantry);
+                if (!filterByPantry) {
+                  setLoading(true);
+                  const pantryRecipes = await searchRecipesByPantry(user.user_id);
+                  setRecipes(pantryRecipes);
+                  setLoading(false);
+                } else {
+                  loadRecipes();
+                }
+              }}
+              style={{
+                padding: '14px 28px',
+                background: filterByPantry ? 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)' : '#fff',
+                color: filterByPantry ? '#fff' : '#ff9800',
+                border: filterByPantry ? 'none' : '2px solid #ff9800',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: '600',
+                boxShadow: filterByPantry ? '0 4px 12px rgba(255, 152, 0, 0.3)' : 'none',
+                transition: 'all 0.3s'
+              }}
+            >
+              {filterByPantry ? '✓ Filtered by Pantry' : 'Filter by Pantry'}
+            </button>
+          )}
         </div>
 
         {showAddForm && (
@@ -577,7 +685,7 @@ function App() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           <div>
-            <h2 style={{ 
+            <h2 style={{
               color: '#2d5016',
               fontSize: '22px',
               fontWeight: '600',
@@ -586,13 +694,140 @@ function App() {
               {viewMode === 'all' && `All Recipes (${filteredRecipes.length})`}
               {viewMode === 'my' && `My Recipes (${filteredRecipes.length})`}
               {viewMode === 'saved' && `Saved Recipes (${filteredRecipes.length})`}
+              {viewMode === 'pantry' && `My Pantry (${pantryItems.length})`}
             </h2>
             {loading && <p style={{ color: '#7cb342' }}>Loading...</p>}
-            {filteredRecipes.length === 0 && !loading && (
-              <p style={{ color: '#9e9e9e' }}>No recipes found.</p>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {filteredRecipes.map((recipe) => (
+
+            {viewMode === 'pantry' ? (
+              <>
+                <div style={{
+                  background: '#ffffff',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  marginBottom: '20px',
+                  border: '1px solid rgba(76, 175, 80, 0.2)'
+                }}>
+                  <h3 style={{ marginTop: 0, color: '#2d5016', fontSize: '18px', fontWeight: '600' }}>
+                    Add Ingredient
+                  </h3>
+                  <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
+                    <input
+                      type="text"
+                      placeholder="Ingredient name"
+                      value={newPantryItem.ingredient_name}
+                      onChange={(e) => setNewPantryItem({ ...newPantryItem, ingredient_name: e.target.value })}
+                      style={{
+                        padding: '12px',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                        fontSize: '15px',
+                        background: '#fff',
+                        color: '#333'
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <input
+                        type="text"
+                        placeholder="Quantity (optional)"
+                        value={newPantryItem.quantity}
+                        onChange={(e) => setNewPantryItem({ ...newPantryItem, quantity: e.target.value })}
+                        style={{
+                          flex: 1,
+                          padding: '12px',
+                          border: '2px solid #e0e0e0',
+                          borderRadius: '8px',
+                          fontSize: '15px',
+                          background: '#fff',
+                          color: '#333'
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Unit (optional)"
+                        value={newPantryItem.unit}
+                        onChange={(e) => setNewPantryItem({ ...newPantryItem, unit: e.target.value })}
+                        style={{
+                          flex: 1,
+                          padding: '12px',
+                          border: '2px solid #e0e0e0',
+                          borderRadius: '8px',
+                          fontSize: '15px',
+                          background: '#fff',
+                          color: '#333'
+                        }}
+                      />
+                    </div>
+                    <button
+                      onClick={handleAddPantryItem}
+                      style={{
+                        padding: '12px',
+                        background: 'linear-gradient(135deg, #66bb6a 0%, #4caf50 100%)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '15px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Add to Pantry
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {pantryItems.length === 0 && !loading && (
+                    <p style={{ color: '#9e9e9e' }}>No pantry items yet. Add some ingredients!</p>
+                  )}
+                  {pantryItems.map((item) => (
+                    <div
+                      key={item.ingredient_id}
+                      style={{
+                        padding: '18px',
+                        background: '#ffffff',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(76, 175, 80, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div>
+                        <h3 style={{ margin: 0, color: '#2d5016', fontSize: '16px', fontWeight: '600' }}>
+                          {item.ingredient_name}
+                        </h3>
+                        {(item.quantity || item.unit) && (
+                          <p style={{ margin: '4px 0 0 0', color: '#7cb342', fontSize: '14px' }}>
+                            {item.quantity} {item.unit}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleRemovePantryItem(item.ingredient_id)}
+                        style={{
+                          padding: '8px 16px',
+                          background: '#ff5252',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '600'
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                {filteredRecipes.length === 0 && !loading && (
+                  <p style={{ color: '#9e9e9e' }}>No recipes found.</p>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {filteredRecipes.map((recipe) => (
                 <div
                   key={recipe.recipe_id}
                   style={{
@@ -620,16 +855,32 @@ function App() {
                     }
                   }}
                 >
-                  <h3 style={{ 
+                  <h3 style={{
                     margin: '0 0 6px 0',
                     fontSize: '18px',
                     fontWeight: '600'
                   }}>
                     {recipe.title}
                   </h3>
-                  <p style={{ 
-                    margin: 0, 
-                    fontSize: '14px', 
+                  {filterByPantry && recipe.match_percentage !== undefined && (
+                    <div style={{
+                      display: 'inline-block',
+                      padding: '4px 10px',
+                      background: recipe.match_percentage === 100
+                        ? (selectedRecipe?.recipe_id === recipe.recipe_id ? 'rgba(255,255,255,0.3)' : '#4caf50')
+                        : (selectedRecipe?.recipe_id === recipe.recipe_id ? 'rgba(255,255,255,0.2)' : '#ff9800'),
+                      color: selectedRecipe?.recipe_id === recipe.recipe_id ? '#fff' : '#fff',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      marginBottom: '8px'
+                    }}>
+                      {recipe.matched_ingredients_count}/{recipe.required_ingredients_count} ingredients ({recipe.match_percentage}%)
+                    </div>
+                  )}
+                  <p style={{
+                    margin: 0,
+                    fontSize: '14px',
                     opacity: selectedRecipe?.recipe_id === recipe.recipe_id ? 0.95 : 0.7,
                     lineHeight: '1.5'
                   }}>
@@ -663,7 +914,9 @@ function App() {
                   )}
                 </div>
               ))}
-            </div>
+                </div>
+              </>
+            )}
           </div>
 
           <div>
@@ -736,7 +989,7 @@ function App() {
 
                 {selectedRecipe.ingredients && selectedRecipe.ingredients.length > 0 && (
                   <div style={{ marginBottom: '24px' }}>
-                    <h4 style={{ 
+                    <h4 style={{
                       color: '#2d5016',
                       fontSize: '18px',
                       fontWeight: '600',
@@ -744,17 +997,55 @@ function App() {
                     }}>
                       Ingredients
                     </h4>
-                    <ul style={{ 
+                    <ul style={{
                       color: '#555',
                       lineHeight: '1.8',
-                      paddingLeft: '20px'
+                      paddingLeft: '20px',
+                      listStyle: 'none'
                     }}>
-                      {selectedRecipe.ingredients.map((ing, idx) => (
-                        <li key={idx}>
-                          {ing.quantity} {ing.unit} {ing.name}
-                          {ing.optional && ' (optional)'}
+                      {selectedRecipe.ingredients.map((ing, idx) => {
+                        const matchType = ing.match_type || (ing.in_pantry ? 'exact' : 'none');
+                        const isSimilar = matchType === 'similar';
+                        const isExact = matchType === 'exact';
+
+                        return (
+                        <li key={idx} style={{
+                          marginBottom: '12px',
+                          padding: '10px',
+                          background: filterByPantry
+                            ? (isExact ? '#e8f5e9' : (isSimilar ? '#fff9c4' : (ing.optional ? '#fff3e0' : '#ffebee')))
+                            : 'transparent',
+                          borderRadius: '6px',
+                          border: filterByPantry
+                            ? (isExact ? '1px solid #4caf50' : (isSimilar ? '1px solid #fbc02d' : (ing.optional ? '1px solid #ff9800' : '1px solid #f44336')))
+                            : 'none'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>
+                              {ing.quantity} {ing.unit} {ing.name}
+                              {ing.optional && ' (optional)'}
+                            </span>
+                            {filterByPantry && (
+                              <span style={{
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                background: isExact ? '#4caf50' : (isSimilar ? '#fbc02d' : (ing.optional ? '#ff9800' : '#f44336')),
+                                color: '#fff'
+                              }}>
+                                {isExact ? '✓ In Pantry' : (isSimilar ? '~ Similar' : (ing.optional ? 'Optional' : 'Missing'))}
+                              </span>
+                            )}
+                          </div>
+                          {filterByPantry && (isExact || isSimilar) && ing.pantry_name && (
+                            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                              You have: {ing.pantry_name}
+                            </div>
+                          )}
                         </li>
-                      ))}
+                        );
+                      })}
                     </ul>
                   </div>
                 )}

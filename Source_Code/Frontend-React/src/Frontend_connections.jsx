@@ -118,6 +118,64 @@ export async function getSavedRecipes(userId) {
 }
 
 
+export async function getUserPantry(userId) {
+  try {
+    const response = await fetch(`${API_URL}/api/pantry/${userId}`);
+    if (!response.ok) throw new Error("Failed to fetch pantry items");
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+export async function addPantryItem(userId, ingredientName, quantity, unit) {
+  try {
+    const response = await fetch(`${API_URL}/api/pantry`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: userId,
+        ingredient_name: ingredientName,
+        quantity: quantity,
+        unit: unit
+      }),
+    });
+    if (!response.ok) throw new Error("Failed to add pantry item");
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export async function removePantryItem(userId, ingredientId) {
+  try {
+    const response = await fetch(`${API_URL}/api/pantry`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, ingredient_id: ingredientId }),
+    });
+    if (!response.ok) throw new Error("Failed to remove pantry item");
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export async function searchRecipesByPantry(userId) {
+  try {
+    const response = await fetch(`${API_URL}/api/recipes/search-by-pantry/${userId}`);
+    if (!response.ok) throw new Error("Failed to search recipes by pantry");
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+
 export async function fetch_user_by_id(id) {
   try {
     const content = await fetch(`${API_URL}/api/users/${id}`);
