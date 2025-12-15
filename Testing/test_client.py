@@ -18,6 +18,7 @@ def mock_supabase():
         yield fake_client
 
 
+#Queries
 def test_get_all_recipes(client):
     mock_data = [
         {"recipe_id": 1, "name": "Spaghetti"},
@@ -94,7 +95,7 @@ def test_get_saved_recipes(client):
     assert response.status_code == 200
     assert response.get_json() == saved
 
-
+#Commands
 def test_insert_recipe(client):
     result = {"recipe_id": 3, "name": "Pizza"}
 
@@ -160,12 +161,10 @@ def test_register_user_error(client):
 
 
 def test_authenticate_success(client, mock_supabase):
-    # Mock authentication result
     with patch(
         "Source_Code.Backend.Backend_connections.authenticate",
         return_value=1,
     ):
-        # Mock Supabase chained calls
         user_data = MagicMock()
         user_data.data = {"display_name": "Adam"}
 
