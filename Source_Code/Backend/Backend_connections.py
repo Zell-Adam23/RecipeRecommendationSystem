@@ -28,6 +28,7 @@ from .Commands.edit_recipe import edit_recipe
 from .Commands.authentiate_user import authenticate
 from .Commands.register_user import register_user
 from .Commands.save_recipe import save_recipe
+from .Commands.unsave_recipe import unsave_recipe
 
 app = Flask(__name__)
 
@@ -163,5 +164,5 @@ def api_unsave_recipe():
 
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": #pragma: no cover
     app.run(debug=True)
