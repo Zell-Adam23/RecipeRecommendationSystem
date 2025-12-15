@@ -1,4 +1,4 @@
-from Supabase_client import get_supabase_client
+from ..Supabase_client import get_supabase_client
 
 def get_all_recipes():
     """fetch_all_recipes"""
