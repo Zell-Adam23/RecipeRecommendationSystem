@@ -17,7 +17,7 @@ api/users/authenticate, POST: authenticates a users password (verifies hashed pa
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from .Supabase_client import get_supabase_client
+from Supabase_client import get_supabase_client
 from .Queries.get_all_recipes import get_all_recipes
 from .Queries.get_full_recipe import get_recipe_by_id
 from .Queries.search_recipes import search_recipe
