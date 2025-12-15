@@ -95,6 +95,37 @@ def test_get_saved_recipes(client):
     assert response.status_code == 200
     assert response.get_json() == saved
 
+
+def test_api_get_user_pantry(client):
+    user_id = 1
+    mock_pantry = [{"ingredient_id": 10, "ingredient_name": "Flour", "quantity": 100, "unit": "g"}]
+
+    with patch("Source_Code.Backend.Backend_connections.get_user_pantry", return_value=mock_pantry):
+        resp = client.get(f"/api/pantry/{user_id}")
+        assert resp.status_code == 200
+        assert resp.get_json() == mock_pantry
+
+
+def test_api_search_recipes_by_pantry(client):
+    user_id = 1
+    mock_recipes = [
+        {
+            "recipe_id": 101,
+            "title": "Pasta",
+            "short_description": "Delicious",
+            "ingredients": [],
+            "required_ingredients_count": 0,
+            "matched_ingredients_count": 0,
+            "match_percentage": 100
+        }
+    ]
+
+    with patch("Source_Code.Backend.Backend_connections.search_recipes_by_pantry", return_value=mock_recipes):
+        resp = client.get(f"/api/recipes/search-by-pantry/{user_id}")
+        assert resp.status_code == 200
+        assert resp.get_json() == mock_recipes
+
+
 #Commands
 def test_insert_recipe(client):
     result = {"recipe_id": 3, "name": "Pizza"}
@@ -247,3 +278,23 @@ def test_unsave_recipe_success(client):
 
     assert response.status_code == 200
     assert response.get_json() == result
+
+
+def test_api_add_pantry_item(client):
+    payload = {"user_id": 1, "ingredient_name": "Sugar", "quantity": 50, "unit": "g"}
+    mock_result = {"success": True, "ingredient_id": 42, "ingredient_name": "Sugar"}
+
+    with patch("Source_Code.Backend.Backend_connections.add_pantry_item", return_value=(mock_result, 201)):
+        resp = client.post("/api/pantry", json=payload)
+        assert resp.status_code == 201
+        assert resp.get_json() == mock_result
+
+
+def test_api_remove_pantry_item(client):
+    payload = {"user_id": 1, "ingredient_id": 42}
+    mock_result = {"success": True, "user_id": 1, "ingredient_id": 42}
+
+    with patch("Source_Code.Backend.Backend_connections.remove_pantry_item", return_value=(mock_result, 200)):
+        resp = client.delete("/api/pantry", json=payload)
+        assert resp.status_code == 200
+        assert resp.get_json() == mock_result

@@ -6,6 +6,8 @@ from Source_Code.Backend.Queries.get_full_recipe import get_recipe_by_id
 from Source_Code.Backend.Queries.get_saved_recipes import get_saved_recipes
 from Source_Code.Backend.Queries.get_user_by_id import get_user_by_id
 from Source_Code.Backend.Queries.search_recipes import search_recipe
+from Source_Code.Backend.Queries.get_user_pantry import get_user_pantry
+from Source_Code.Backend.Queries.search_recipes_by_pantry import search_recipes_by_pantry
 
 
 
@@ -215,3 +217,72 @@ def test_search_recipe_returns_results():
 
     assert result == mock_response.data
 
+def test_get_user_pantry_basic():
+    user_id = 1
+
+    # Mock pantry items returned by Supabase
+    mock_pantry_data = [{"ingredient_id": 10, "quantity": 100, "unit": "g"}]
+    mock_ingredient_data = {"name": "Flour"}
+
+    # Helper to mock .table().select().eq().single().execute()
+    mock_execute = MagicMock()
+    mock_execute.data = mock_ingredient_data
+
+    mock_single = MagicMock()
+    mock_single.execute.return_value = mock_execute
+
+    mock_eq = MagicMock()
+    mock_eq.single.return_value = mock_single
+    mock_eq.execute.return_value = MagicMock(data=mock_pantry_data)
+
+    mock_select = MagicMock()
+    mock_select.eq.return_value = mock_eq
+    mock_select.execute.return_value = MagicMock(data=mock_pantry_data)
+
+    mock_table = MagicMock()
+    mock_table.select.return_value = mock_select
+
+    mock_client = MagicMock()
+    mock_client.table.return_value = mock_table
+
+    with patch("Source_Code.Backend.Queries.get_user_pantry.get_supabase_client", return_value=mock_client):
+        result = get_user_pantry(user_id)
+
+    assert result == [{
+        "ingredient_id": 10,
+        "ingredient_name": "Flour",
+        "quantity": 100,
+        "unit": "g"
+    }]
+
+
+def test_search_recipes_by_pantry_basic():
+    user_id = 1
+
+    # Pantry mock
+    pantry_item_data = [{"ingredient_id": 10}]
+    ingredient_data = {"name": "Flour"}
+    recipe_data = [{"recipe_id": 1, "title": "Cake", "short_description": "Tasty"}]
+    recipe_ingredient_data = [{"ingredient_id": 10, "quantity": 100, "unit": "g", "optional": False}]
+
+    # Create a single execute mock for all table calls
+    def mk_execute(data):
+        m = MagicMock()
+        m.data = data
+        return m
+
+    mock_client = MagicMock()
+    mock_client.table.return_value.select.return_value.eq.return_value.execute.side_effect = [
+        mk_execute(pantry_item_data),       # USER_PANTRY_ITEM
+        mk_execute(ingredient_data),        # INGREDIENT
+        mk_execute(recipe_data),            # RECIPE
+        mk_execute(recipe_ingredient_data), # RECIPE_INGREDIENT
+        mk_execute(ingredient_data),        # INGREDIENT for recipe ingredient
+    ]
+
+    with patch("Source_Code.Backend.Queries.search_recipes_by_pantry.get_supabase_client", return_value=mock_client):
+        result = search_recipes_by_pantry(user_id)
+
+    assert result[0]["title"] == "Cake"
+    assert result[0]["match_percentage"] == 100
+    assert result[0]["ingredients"][0]["in_pantry"] is True
