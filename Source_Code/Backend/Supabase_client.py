@@ -5,7 +5,7 @@ import os
 
 _supabase_connection = None
 
-def get_supabase_client():
+def get_supabase_client(): #pragma: no cover
     global _supabase_connection
 
     if _supabase_connection is None:
