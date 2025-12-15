@@ -1,5 +1,5 @@
 import pytest
-from Source_Code.Backend.backend_connections import app
+from Source_Code.Backend.Backend_connections import app
 from unittest.mock import patch
 
 
@@ -15,7 +15,7 @@ def test_get_all_recipes(client):
         {"recipe_id": 2, "name": "Tacos"}
     ]
 
-    with patch("Source_Code.Backend.backend_connections.get_all_recipes", return_value=mock_data):
+    with patch("Source_Code.Backend.Backend_connections.get_all_recipes", return_value=mock_data):
         response = client.get("/api/recipes")
         assert response.status_code == 200
         assert response.get_json() == mock_data
