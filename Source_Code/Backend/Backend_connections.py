@@ -31,11 +31,8 @@ from .Commands.authentiate_user import authenticate
 from .Commands.register_user import register_user
 from .Commands.save_recipe import save_recipe
 from .Commands.unsave_recipe import unsave_recipe
-<<<<<<< HEAD
-=======
 from .Commands.add_pantry_item import add_pantry_item
 from .Commands.remove_pantry_item import remove_pantry_item
->>>>>>> origin/main
 
 app = Flask(__name__)
 
