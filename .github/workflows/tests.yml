@@ -23,7 +23,7 @@ jobs:
           pip install pytest pytest-flask
   
       - name: Run tests
-        working-directory: testing
+        working-directory: Testing
         run: pytest
 
       - name: Run tests with coverage
