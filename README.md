@@ -2,9 +2,11 @@
   
 Capstone 1 - Group 36 project  
 by: Adam Zell, Kyle Westwood, Emma Jepson  
-
-Link to Jira: [link](https://emma-jepson.atlassian.net/jira/software/projects/KAN/boards/1?atlOrigin=eyJpIjoiYjA3YjMxMTMxYWJkNGRkOGFmNDYwMTU1MjU1ZjVlNzciLCJwIjoiaiJ9)
-
+  
+Link to Jira: [link](https://emma-jepson.atlassian.net/jira/software/projects/KAN/boards/1?atlOrigin=eyJpIjoiYjA3YjMxMTMxYWJkNGRkOGFmNDYwMTU1MjU1ZjVlNzciLCJwIjoiaiJ9)  
+  
+View the live website here: [link](https://zell-adam23.github.io/RecipeRecommendationSystem/)  
+  
 Team Roles:  
 Adam Zell - Documentation Lead/ Developer  
 Kyle Westwood - Team Lead/ Developer  
@@ -28,9 +30,9 @@ Proposed solution:
 We will create a software application recipe recommender that personalizes the user's diet / pantry based on their personal interests. The users will create a profile and choose ingredients they currently have, then run those ingredients through a recommendation algorithm, then rank recipes based on the users preferences. The target users are individuals who enjoy cooking at home, don't have the time to sift through irrelevant recipes, those who want specific recipes based on their dietary restrictions, and those wanting to use specific ingredients/equipment.
   
 Technology stack:  
-Frontend: react.js  
-Backend: python  
-Database: postgreSQL  
+Frontend: react.js (vite for setup and hosted on github pages)  
+Backend: python (hosted on render)  
+Database: postgreSQL (using supabase)  
   
 Expected outcomes:  
 The final delivered product will be a working prototype that:  
