@@ -1,4 +1,4 @@
-from ..Supabase_client import get_supabase_client
+from Supabase_client import get_supabase_client
 
 def get_saved_recipes(user_id):
     """Get all saved recipes for a user"""

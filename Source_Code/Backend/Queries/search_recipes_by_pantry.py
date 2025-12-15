@@ -1,6 +1,6 @@
 # search_recipes_by_pantry.py - Query to annotate recipes with pantry match info
 
-from ..Supabase_client import get_supabase_client
+from Supabase_client import get_supabase_client
 
 def search_recipes_by_pantry(user_id):
     """Get all recipes with ingredient matching info based on user's pantry"""

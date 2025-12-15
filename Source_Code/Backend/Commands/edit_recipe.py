@@ -1,4 +1,4 @@
-from ..Supabase_client import get_supabase_client
+from Supabase_client import get_supabase_client
 
 def edit_recipe(recipe_id, update_fields):
     """edit_recipe"""

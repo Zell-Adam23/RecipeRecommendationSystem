@@ -1,6 +1,6 @@
 # add_pantry_item.py - Command to add item to user's pantry
 
-from ..Supabase_client import get_supabase_client
+from Supabase_client import get_supabase_client
 
 
 def add_pantry_item(user_id, ingredient_name, quantity=None, unit=None):

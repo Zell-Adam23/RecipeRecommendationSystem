@@ -1,6 +1,6 @@
 # unsave_recipe.py - Command to remove a saved recipe
 
-from ..Supabase_client import get_supabase_client
+from Supabase_client import get_supabase_client
 
 def unsave_recipe(user_id, recipe_id):
     """Remove a recipe from user's saved list"""

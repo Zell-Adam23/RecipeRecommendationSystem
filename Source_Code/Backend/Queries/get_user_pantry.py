@@ -1,6 +1,6 @@
 # get_user_pantry.py - Query to get user's pantry items
 
-from ..Supabase_client import get_supabase_client
+from Supabase_client import get_supabase_client
 
 
 def get_user_pantry(user_id):

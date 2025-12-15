@@ -1,6 +1,6 @@
 # remove_pantry_item.py - Command to remove item from user's pantry
 
-from ..Supabase_client import get_supabase_client
+from Supabase_client import get_supabase_client
 
 
 def remove_pantry_item(user_id, ingredient_id):
