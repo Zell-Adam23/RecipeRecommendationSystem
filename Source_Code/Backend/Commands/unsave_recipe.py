@@ -1,6 +1,6 @@
 # unsave_recipe.py - Command to remove a saved recipe
 
-from Supabase_client import supabase_connection
+from ..Supabase_client import get_supabase_client
 
 def unsave_recipe(user_id, recipe_id):
     """Remove a recipe from user's saved list"""
@@ -9,7 +9,7 @@ def unsave_recipe(user_id, recipe_id):
 
     try:
         # Delete the saved recipe entry from USER_RECIPE_REL table
-        result = supabase_connection.table("USER_RECIPE_REL")\
+        result = get_supabase_client().table("USER_RECIPE_REL")\
             .delete()\
             .eq("user_id", user_id)\
             .eq("recipe_id", recipe_id)\
