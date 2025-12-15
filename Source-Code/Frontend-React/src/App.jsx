@@ -1,7 +1,7 @@
 //App.jsx - the main frontend file
 
 import { useState, useEffect } from 'react';
-import { fetchRecipes, addRecipe, loginUser, registerUser, fetchRecipeById, saveRecipe, getSavedRecipes } from './Frontend_connections';
+import { fetchRecipes, addRecipe, loginUser, registerUser, fetchRecipeById, saveRecipe, unsaveRecipe, getSavedRecipes } from './Frontend_connections';
 
 
 // ============================================
@@ -314,7 +314,12 @@ function App() {
   }
 
   async function handleSaveRecipe(recipeId) {
-    const result = await saveRecipe(user.user_id, recipeId);
+    const isSaved = savedRecipes.includes(recipeId);
+
+    const result = isSaved
+      ? await unsaveRecipe(user.user_id, recipeId)
+      : await saveRecipe(user.user_id, recipeId);
+
     if (result) {
       await loadSavedRecipes();
     }
@@ -702,21 +707,20 @@ function App() {
                   {selectedRecipe.creator_user_id !== user.user_id && (
                     <button
                       onClick={() => handleSaveRecipe(selectedRecipe.recipe_id)}
-                      disabled={savedRecipes.includes(selectedRecipe.recipe_id)}
                       style={{
                         padding: '10px 20px',
-                        background: savedRecipes.includes(selectedRecipe.recipe_id) ? '#e0e0e0' : 'linear-gradient(135deg, #fdd835 0%, #fbc02d 100%)',
-                        color: savedRecipes.includes(selectedRecipe.recipe_id) ? '#9e9e9e' : '#fff',
+                        background: savedRecipes.includes(selectedRecipe.recipe_id) ? '#ff9800' : 'linear-gradient(135deg, #fdd835 0%, #fbc02d 100%)',
+                        color: '#fff',
                         border: 'none',
                         borderRadius: '8px',
-                        cursor: savedRecipes.includes(selectedRecipe.recipe_id) ? 'not-allowed' : 'pointer',
+                        cursor: 'pointer',
                         fontSize: '14px',
                         fontWeight: '600',
-                        boxShadow: savedRecipes.includes(selectedRecipe.recipe_id) ? 'none' : '0 4px 12px rgba(251, 192, 45, 0.3)',
+                        boxShadow: '0 4px 12px rgba(251, 192, 45, 0.3)',
                         transition: 'all 0.3s'
                       }}
                     >
-                      {savedRecipes.includes(selectedRecipe.recipe_id) ? 'Saved' : 'Save Recipe'}
+                      {savedRecipes.includes(selectedRecipe.recipe_id) ? 'Unsave Recipe' : 'Save Recipe'}
                     </button>
                   )}
                 </div>

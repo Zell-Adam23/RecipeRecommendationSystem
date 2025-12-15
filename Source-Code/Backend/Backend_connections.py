@@ -28,6 +28,7 @@ from Commands.edit_recipe import edit_recipe
 from Commands.authentiate_user import authenticate
 from Commands.register_user import register_user
 from Commands.save_recipe import save_recipe
+from Commands.unsave_recipe import unsave_recipe
 
 app = Flask(__name__)
 
@@ -143,6 +144,23 @@ def api_save_recipe():
         return jsonify(result[0]), result[1]
 
     return jsonify(result), 201
+
+
+@app.route("/api/saved-recipes", methods=["DELETE"])
+def api_unsave_recipe():
+    """remove a recipe from user's saved list"""
+
+    data = request.get_json()
+    user_id = data.get("user_id")
+    recipe_id = data.get("recipe_id")
+
+    result = unsave_recipe(user_id, recipe_id)
+
+    # Check if result is a tuple (error case)
+    if isinstance(result, tuple):
+        return jsonify(result[0]), result[1]
+
+    return jsonify(result), 200
 
 
 

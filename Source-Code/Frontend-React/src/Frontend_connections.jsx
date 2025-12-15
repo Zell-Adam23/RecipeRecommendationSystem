@@ -91,6 +91,21 @@ export async function saveRecipe(userId, recipeId) {
   }
 }
 
+export async function unsaveRecipe(userId, recipeId) {
+  try {
+    const response = await fetch(`${API_URL}/api/saved-recipes`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, recipe_id: recipeId }),
+    });
+    if (!response.ok) throw new Error("Failed to unsave recipe");
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
 export async function getSavedRecipes(userId) {
   try {
     const response = await fetch(`${API_URL}/api/saved-recipes/${userId}`);
