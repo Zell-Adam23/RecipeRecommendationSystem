@@ -18,21 +18,21 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from Supabase_client import get_supabase_client
-from .Queries.get_all_recipes import get_all_recipes
-from .Queries.get_full_recipe import get_recipe_by_id
-from .Queries.search_recipes import search_recipe
-from .Queries.get_user_by_id import get_user_by_id
-from .Queries.get_saved_recipes import get_saved_recipes
-from .Queries.get_user_pantry import get_user_pantry
-from .Queries.search_recipes_by_pantry import search_recipes_by_pantry
-from .Commands.create_recipe import insert_recipe
-from .Commands.edit_recipe import edit_recipe
-from .Commands.authentiate_user import authenticate
-from .Commands.register_user import register_user
-from .Commands.save_recipe import save_recipe
-from .Commands.unsave_recipe import unsave_recipe
-from .Commands.add_pantry_item import add_pantry_item
-from .Commands.remove_pantry_item import remove_pantry_item
+from Queries.get_all_recipes import get_all_recipes
+from Queries.get_full_recipe import get_recipe_by_id
+from Queries.search_recipes import search_recipe
+from Queries.get_user_by_id import get_user_by_id
+from Queries.get_saved_recipes import get_saved_recipes
+from Queries.get_user_pantry import get_user_pantry
+from Queries.search_recipes_by_pantry import search_recipes_by_pantry
+from Commands.create_recipe import insert_recipe
+from Commands.edit_recipe import edit_recipe
+from Commands.authentiate_user import authenticate
+from Commands.register_user import register_user
+from Commands.save_recipe import save_recipe
+from Commands.unsave_recipe import unsave_recipe
+from Commands.add_pantry_item import add_pantry_item
+from Commands.remove_pantry_item import remove_pantry_item
 
 app = Flask(__name__)
 
