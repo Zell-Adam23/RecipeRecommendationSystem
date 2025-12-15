@@ -2,10 +2,11 @@
 
 from ..Supabase_client import get_supabase_client
 
-supabase_connection = get_supabase_client()
-
 def search_recipes_by_pantry(user_id):
     """Get all recipes with ingredient matching info based on user's pantry"""
+
+    supabase_connection = get_supabase_client()
+
     if not user_id:
         return []
 
