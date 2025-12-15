@@ -5,11 +5,10 @@ from ..Supabase_client import get_supabase_client
 
 def add_pantry_item(user_id, ingredient_name, quantity=None, unit=None):
     """Add or update an ingredient in user's pantry"""
-
-    supabase_connection = get_supabase_client()
-
     if not user_id or not ingredient_name:
         return {"error": "Missing user_id or ingredient_name"}, 400
+
+    supabase_connection = get_supabase_client()
 
     try:
         # Get or create ingredient

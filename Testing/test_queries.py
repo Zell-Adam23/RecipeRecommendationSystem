@@ -30,6 +30,7 @@ def test_get_all_recipes_returns_data():
 
     assert result == mock_response.data
 
+
 def test_get_recipe_by_id_returns_none_when_not_found():
     mock_client = MagicMock()
 
@@ -168,6 +169,7 @@ def test_get_saved_recipes_returns_saved_recipes():
 
     assert result == mock_response.data
 
+
 def test_get_user_by_id_returns_user_data():
     mock_response = MagicMock()
     mock_response.data = {
@@ -217,84 +219,142 @@ def test_search_recipe_returns_results():
 
     assert result == mock_response.data
 
-def test_get_user_pantry_basic():
-    user_id = 1
 
-    # Mock pantry items returned by Supabase
-    mock_pantry_data = [{"ingredient_id": 10, "quantity": 100, "unit": "g"}]
-    mock_ingredient_data = {"name": "Flour"}
+def test_get_user_pantry_missing_user_id():
+    # Should return empty list if no user_id
+    assert get_user_pantry(None) == []
 
-    # Helper to mock .table().select().eq().single().execute()
-    mock_execute = MagicMock()
-    mock_execute.data = mock_ingredient_data
 
-    mock_single = MagicMock()
-    mock_single.execute.return_value = mock_execute
-
-    mock_eq = MagicMock()
-    mock_eq.single.return_value = mock_single
-    mock_eq.execute.return_value = MagicMock(data=mock_pantry_data)
-
-    mock_select = MagicMock()
-    mock_select.eq.return_value = mock_eq
-    mock_select.execute.return_value = MagicMock(data=mock_pantry_data)
-
-    mock_table = MagicMock()
-    mock_table.select.return_value = mock_select
-
+def test_get_user_pantry_empty():
     mock_client = MagicMock()
-    mock_client.table.return_value = mock_table
+    mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value.data = []
 
     with patch("Source_Code.Backend.Queries.get_user_pantry.get_supabase_client", return_value=mock_client):
-        result = get_user_pantry(user_id)
-
-    assert result == [{
-        "ingredient_id": 10,
-        "ingredient_name": "Flour",
-        "quantity": 100,
-        "unit": "g"
-    }]
+        result = get_user_pantry(1)
+    
+    assert result == []
 
 
-def test_search_recipes_by_pantry_basic():
-    user_id = 1
-
-    # Mock data
-    pantry_items = [{"ingredient_id": 10}]
-    ingredient_lookup = {"name": "Flour"}
-    recipes = [{"recipe_id": 1, "title": "Cake", "short_description": "Tasty"}]
-    recipe_ingredients = [{"ingredient_id": 10, "quantity": 100, "unit": "g", "optional": False}]
-
-    # Create a MagicMock client
+def test_get_user_pantry_success():
     mock_client = MagicMock()
+    
+    pantry_data = [{"ingredient_id": 10, "quantity": 100, "unit": "g"}]
+    ingredient_data = {"name": "Flour"}
+    
+    # USER_PANTRY_ITEM -> INGREDIENT
+    mock_client.table.return_value.select.return_value.eq.return_value.execute.side_effect = [
+        MagicMock(data=pantry_data),
+        MagicMock(data=ingredient_data)
+    ]
+    mock_client.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = MagicMock(data=ingredient_data)
 
-    # Function to return different data depending on table name
-    def table_side_effect(table_name):
-        table_mock = MagicMock()
-        if table_name == "USER_PANTRY_ITEM":
-            table_mock.select.return_value.eq.return_value.execute.return_value.data = pantry_items
-        elif table_name == "INGREDIENT":
-            table_mock.select.return_value.eq.return_value.single.return_value.execute.return_value.data = ingredient_lookup
-        elif table_name == "RECIPE":
-            table_mock.select.return_value.eq.return_value.execute.return_value.data = recipes
-        elif table_name == "RECIPE_INGREDIENT":
-            table_mock.select.return_value.eq.return_value.execute.return_value.data = recipe_ingredients
-        else:
-            table_mock.select.return_value.eq.return_value.execute.return_value.data = []
-        return table_mock
+    with patch("Source_Code.Backend.Queries.get_user_pantry.get_supabase_client", return_value=mock_client):
+        result = get_user_pantry(1)
 
-    mock_client.table.side_effect = table_side_effect
+    assert len(result) == 1
+    item = result[0]
+    assert item["ingredient_id"] == 10
+    assert item["ingredient_name"] == "Flour"
+    assert item["quantity"] == 100
+    assert item["unit"] == "g"
+
+
+def test_get_user_pantry_exception():
+    mock_client = MagicMock()
+    mock_client.table.side_effect = Exception("DB error")
+
+    with patch("Source_Code.Backend.Queries.get_user_pantry.get_supabase_client", return_value=mock_client):
+        result = get_user_pantry(1)
+
+    assert result == []
+
+
+def test_search_recipes_by_pantry_missing_user_id():
+    assert search_recipes_by_pantry(None) == []
+
+
+def test_search_recipes_by_pantry_no_pantry_items():
+    mock_client = MagicMock()
+    mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value.data = []
 
     with patch("Source_Code.Backend.Queries.search_recipes_by_pantry.get_supabase_client", return_value=mock_client):
-        result = search_recipes_by_pantry(user_id)
+        result = search_recipes_by_pantry(1)
+
+    assert isinstance(result, list)
+
+
+def test_search_recipes_by_pantry_no_public_recipes():
+    mock_client = MagicMock()
+    
+    pantry_item_data = [{"ingredient_id": 10}]
+    ingredient_data = {"name": "Flour"}
+    
+    mock_client.table.return_value.select.return_value.eq.return_value.execute.side_effect = [
+        MagicMock(data=pantry_item_data),  # pantry
+        MagicMock(data=ingredient_data),   # ingredient lookup
+        MagicMock(data=[])                  # no public recipes
+    ]
+    mock_client.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = MagicMock(data=ingredient_data)
+
+    with patch("Source_Code.Backend.Queries.search_recipes_by_pantry.get_supabase_client", return_value=mock_client):
+        result = search_recipes_by_pantry(1)
+    
+    assert result == []
+
+
+def test_search_recipes_by_pantry_success():
+    mock_client = MagicMock()
+
+    # USER_PANTRY_ITEM mock
+    pantry_item_data = [{"ingredient_id": 10}]
+    pantry_item_mock = MagicMock()
+    pantry_item_mock.data = pantry_item_data
+
+    # INGREDIENT mock (for pantry lookup)
+    ingredient_pantry_data = {"name": "Flour"}
+    ingredient_pantry_mock = MagicMock()
+    ingredient_pantry_mock.data = ingredient_pantry_data
+
+    # RECIPE mock
+    recipe_data = [{"recipe_id": 1, "title": "Cake", "short_description": "Tasty"}]
+    recipe_mock = MagicMock()
+    recipe_mock.data = recipe_data
+
+    # RECIPE_INGREDIENT mock
+    recipe_ingredient_data = [{"ingredient_id": 10, "quantity": 100, "unit": "g", "optional": False}]
+    recipe_ingredient_mock = MagicMock()
+    recipe_ingredient_mock.data = recipe_ingredient_data
+
+    # Setup execute.side_effect for main queries
+    mock_client.table.return_value.select.return_value.eq.return_value.execute.side_effect = [
+        pantry_item_mock,         # USER_PANTRY_ITEM
+        recipe_mock,              # RECIPE
+        recipe_ingredient_mock,   # RECIPE_INGREDIENT
+    ]
+
+    # Setup single().execute() to return real ingredient dicts
+    mock_client.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = ingredient_pantry_mock
+
+    with patch("Source_Code.Backend.Queries.search_recipes_by_pantry.get_supabase_client", return_value=mock_client):
+        result = search_recipes_by_pantry(1)
 
     # Assertions
     assert len(result) == 1
-    assert result[0]["title"] == "Cake"
-    assert result[0]["required_ingredients_count"] == 1
-    assert result[0]["matched_ingredients_count"] == 1
-    assert result[0]["match_percentage"] == 100.0
-    ingredient = result[0]["ingredients"][0]
-    assert ingredient["name"] == "Flour"
-    assert ingredient["in_pantry"] is True
-    assert ingredient["match_type"] == "exact"
+    recipe = result[0]
+    assert recipe["title"] == "Cake"
+    assert recipe["required_ingredients_count"] == 1
+    assert recipe["matched_ingredients_count"] == 1
+    assert recipe["match_percentage"] == 100
+    assert recipe["ingredients"][0]["name"] == "Flour"
+    assert recipe["ingredients"][0]["in_pantry"] is True
+    assert recipe["ingredients"][0]["match_type"] == "exact"
+
+
+def test_search_recipes_by_pantry_exception():
+    mock_client = MagicMock()
+    mock_client.table.side_effect = Exception("DB error")
+    
+    with patch("Source_Code.Backend.Queries.search_recipes_by_pantry.get_supabase_client", return_value=mock_client):
+        result = search_recipes_by_pantry(1)
+    
+    assert result == []

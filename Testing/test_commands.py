@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import MagicMock, patch
 
 from Source_Code.Backend.Commands.authentiate_user import authenticate
@@ -479,33 +480,97 @@ def test_unsave_recipe_exception_returns_500():
     assert "DB error" in result["error"]
 
 
-def test_add_pantry_item_new():
-    user_id = 1
-    ingredient_name = "Sugar"
+def test_add_pantry_item_missing_user_or_ingredient():
+    # Missing user_id
+    result, status = add_pantry_item(None, "Flour")
+    assert status == 400
+    assert "Missing user_id" in result["error"]
 
+    # Missing ingredient_name
+    result, status = add_pantry_item(1, None)
+    assert status == 400
+    assert "ingredient_name" in result["error"]
+
+
+def test_add_pantry_item_existing_ingredient_updates():
     mock_client = MagicMock()
-    # Simulate ingredient not existing, so insert is called
-    mock_client.table.return_value.select.return_value.execute.return_value.data = []
-    mock_client.table.return_value.insert.return_value.execute.return_value.data = [{"ingredient_id": 42}]
-    
+    # Existing ingredient found
+    mock_client.table.return_value.select.return_value.ilike.return_value.execute.return_value.data = [{"ingredient_id": 10}]
+    # Existing pantry item
+    mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [{"ingredient_id": 10}]
+    # Update returns
+    mock_client.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value.data = [{"ingredient_id": 10}]
+
     with patch("Source_Code.Backend.Commands.add_pantry_item.get_supabase_client", return_value=mock_client):
-        result, status = add_pantry_item(user_id, ingredient_name, quantity=50, unit="g")
+        result, status = add_pantry_item(1, "Flour", 100, "g")
 
     assert status == 201
-    assert result["ingredient_name"] == "Sugar"
-    assert result["ingredient_id"] == 42
+    assert result["ingredient_id"] == 10
+    assert result["ingredient_name"] == "Flour"
 
 
-def test_remove_pantry_item_basic():
-    user_id = 1
-    ingredient_id = 42
-
+def test_add_pantry_item_new_ingredient_inserts():
     mock_client = MagicMock()
-    mock_client.table.return_value.delete.return_value.eq.return_value.execute.return_value = MagicMock()
+    # No existing ingredient
+    mock_client.table.return_value.select.return_value.ilike.return_value.execute.return_value.data = []
+    # Insert new ingredient
+    mock_client.table.return_value.insert.return_value.execute.return_value.data = [{"ingredient_id": 20}]
+    # No existing pantry item
+    mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value.data = []
+    # Insert pantry item
+    mock_client.table.return_value.insert.return_value.execute.return_value.data = [{"ingredient_id": 20}]
+
+    with patch("Source_Code.Backend.Commands.add_pantry_item.get_supabase_client", return_value=mock_client):
+        result, status = add_pantry_item(1, "Sugar", 50, "g")
+
+    assert status == 201
+    assert result["ingredient_id"] == 20
+    assert result["ingredient_name"] == "Sugar"
+
+
+def test_add_pantry_item_exception_handling():
+    mock_client = MagicMock()
+    mock_client.table.side_effect = Exception("DB error")
+
+    with patch("Source_Code.Backend.Commands.add_pantry_item.get_supabase_client", return_value=mock_client):
+        result, status = add_pantry_item(1, "Salt")
+
+    assert status == 500
+    assert "DB error" in result["error"]
+
+
+def test_remove_pantry_item_missing_user_or_ingredient():
+    # Missing user_id
+    result, status = remove_pantry_item(None, 10)
+    assert status == 400
+    assert "Missing" in result["error"]
+
+    # Missing ingredient_id
+    result, status = remove_pantry_item(1, None)
+    assert status == 400
+    assert "Missing" in result["error"]
+
+
+def test_remove_pantry_item_successful_deletion():
+    mock_client = MagicMock()
+    # Delete chain
+    mock_client.table.return_value.delete.return_value.eq.return_value.eq.return_value.execute.return_value.data = [{"ingredient_id": 10}]
 
     with patch("Source_Code.Backend.Commands.remove_pantry_item.get_supabase_client", return_value=mock_client):
-        result, status = remove_pantry_item(user_id, ingredient_id)
+        result, status = remove_pantry_item(1, 10)
 
     assert status == 200
-    assert result["user_id"] == user_id
-    assert result["ingredient_id"] == ingredient_id
+    assert result["success"] is True
+    assert result["user_id"] == 1
+    assert result["ingredient_id"] == 10
+
+
+def test_remove_pantry_item_exception_handling():
+    mock_client = MagicMock()
+    mock_client.table.side_effect = Exception("DB error")
+
+    with patch("Source_Code.Backend.Commands.remove_pantry_item.get_supabase_client", return_value=mock_client):
+        result, status = remove_pantry_item(1, 10)
+
+    assert status == 500
+    assert "DB error" in result["error"]

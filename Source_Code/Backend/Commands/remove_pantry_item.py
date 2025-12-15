@@ -5,12 +5,10 @@ from ..Supabase_client import get_supabase_client
 
 def remove_pantry_item(user_id, ingredient_id):
     """Remove an ingredient from user's pantry"""
-
-    supabase_connection = get_supabase_client()
-
-
     if not user_id or not ingredient_id:
         return {"error": "Missing user_id or ingredient_id"}, 400
+
+    supabase_connection = get_supabase_client()
 
     try:
         # Delete the pantry item
